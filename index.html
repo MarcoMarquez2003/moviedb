@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peliculas</title>
+	<style type="text/css">
+		.form_container {
+		  width: 60%;
+		  margin: auto;
+		  margin-top: 50px;
+		}
+	  </style>
+	  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+	  </head>
+	  <body>
+		<div id="app">
+		  <fieldset class="form_container" id="main">
+			<legend>Peliculas</legend>
+			<form @submit.prevent="login">
+			  <fieldset>
+				<legend>
+				  <label>Username</label>
+				</legend>
+				<input type="text" v-model="username" name="username" />
+			  </fieldset>
+	  
+			  <fieldset>
+				<legend>
+				  <label>Password</label>
+				</legend>
+				<input type="password" v-model="password" name="password" />
+			  </fieldset>
+	  
+			  <button type="submit">Iniciar sesion</button>
+			  <p v-if="error" style="color: red">{{ errorMessage }}</p>
+			</form>
+		  </fieldset>
+		</div>	  
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            username: "MarcoMarquez2003", 
+            password: "Mamm15243",
+            error: false,
+            errorMessage: "",
+          };
+        },
+        methods: {
+          async login() {
+            const apiKey = "cac3346651c70a5441cf5047e757c138";
+
+            try {
+              const requestTokenResponse = await axios.get(
+                `https://api.themoviedb.org/3/authentication/token/new?api_key=${apiKey}`
+              );
+              const requestToken = requestTokenResponse.data.request_token;
+
+              if (!requestToken) {
+                this.error = true;
+                this.errorMessage = "No se pudo obtener el token de solicitud.";
+                return;
+              }
+
+              const loginResponse = await axios.post(
+                `https://api.themoviedb.org/3/authentication/token/validate_with_login?api_key=${apiKey}`,
+                {
+                  username: this.username,
+                  password: this.password,
+                  request_token: requestToken,
+                }
+              );
+
+              if (!loginResponse.data.success) {
+                this.error = true;
+                this.errorMessage = "Usuario o contraseña incorrectos.";
+                return;
+              }
+
+              const sessionResponse = await axios.post(
+                `https://api.themoviedb.org/3/authentication/session/new?api_key=${apiKey}`,
+                {
+                  request_token: loginResponse.data.request_token,
+                }
+              );
+
+              const sessionId = sessionResponse.data.session_id;
+              window.location.href = "movies.html";
+            } catch (error) {
+              this.error = true;
+              this.errorMessage =
+                "Ocurrió un error. Por favor, inténtalo de nuevo más tarde.";
+            }
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
